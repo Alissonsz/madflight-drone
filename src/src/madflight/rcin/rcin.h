@@ -53,6 +53,7 @@ SOFTWARE.
 #define RCIN_USE_PPM   4
 #define RCIN_USE_PWM   5
 #define RCIN_USE_DEBUG 6
+#define RCIN_USE_IBUS  7
 
 //Rcin implements public interface, and is base for specific rcin radio classes
 class Rcin : public Rcin_interface {
@@ -535,6 +536,9 @@ RcinPWM rcin_instance;
 //=================================================================================================
 // Invalid value
 //=================================================================================================
+#elif RCIN_USE == RCIN_USE_IBUS
+#include "IBusBM.h"
+
 #else
   #error "invalid RCIN_USE value"
 #endif
