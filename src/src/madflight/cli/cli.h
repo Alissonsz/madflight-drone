@@ -486,7 +486,6 @@ public:
     float gyerr = 0;
     float gzerr = 0;
     for(int i=0; i<cnt; i++) {
-       Serial.print("calibrating...\n");
       imu.waitNewSample();
      
       axerr += imu.ax;

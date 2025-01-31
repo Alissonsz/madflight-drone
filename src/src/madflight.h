@@ -177,7 +177,7 @@ SOFTWARE.
     //start IMU update handler
     if(!imu_loop) Serial.println("=== WARNING === 'void imu_loop()' not defined.");
     imu.onUpdate = imu_loop;
-    // if(!imu.waitNewSample()) madflight_die("IMU interrupt not firing. Is HW_PIN_IMU_EXTI connected?");
+    if(!imu.waitNewSample()) madflight_die("IMU interrupt not firing. Is HW_PIN_IMU_EXTI connected?");
 
     #ifndef MF_SETUP_FAST
       //Calibrate for zero gyro readings, assuming vehicle not moving when powered up. Comment out to only use cfg values. (Use CLI to calibrate acc.)

@@ -41,6 +41,15 @@ float yaw_desired = 0;
 //========================================================================================================================//
 //                                                       SETUP()                                                          //
 //========================================================================================================================//
+void printOutStateTask(void *parameter) {
+  //Prints out the state of the out module
+  while(1) {
+    //Serial.print("out 0: "); Serial.print(out.pwm[0]); Serial.print(" 1: "); Serial.print(out.pwm[1]); Serial.print(" 2: "); Serial.print(out.pwm[2]); Serial.print(" 3: "); Serial.println(out.pwm[3]);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+  }
+  //Serial.print("out.armed: "); Serial.print(out.armed); Serial.print(" out.command: "); Serial.print(out.command[0]); Serial.print(" "); Serial.print(out.command[1]); Serial.print(" "); Serial.print(out.command[2]); Serial.print(" "); Serial.println(out.command[3]);
+
+}
 
 void setup() {
   //setup madflight components: Serial.begin(115200), imu, rcin, led, etc. See src/madflight/interface.h for full interface description of each component. 
@@ -56,6 +65,7 @@ void setup() {
   //set initial desired yaw
   yaw_desired = ahrs.yaw;
   Serial.println("Setup complete");
+  //xTaskCreate(printOutStateTask, "printOutStateTask", 1024, NULL, 1, NULL);
 }
 
 //========================================================================================================================//
@@ -81,6 +91,7 @@ void imu_loop() {
   //Get radio commands - Note: don't do this in loop() because loop() is a lower priority task than imu_loop(), so in worst case loop() will not get any processor time.
   rcin.update();
 
+  Serial.print("flightmode: "); Serial.println(rcin.flightmode);
   //PID Controller RATE or ANGLE
   #ifdef FLIGHTMODE_ANGLE
     control_Angle(rcin.throttle == 0); //Stabilize on pitch/roll angle setpoint, stabilize yaw on rate setpoint  //control_Angle2(rcin_thro_is_low); //Stabilize on pitch/roll setpoint using cascaded method. Rate controller must be tuned well first!
@@ -305,13 +316,13 @@ Yaw right               (CCW+ CW-)       -++-
   // IMPORTANT: This is a safety feature to remind the pilot to disarm.
   // Set throttle to at least armed_min_throttle, to keep at least one prop spinning when armed. The [out] module will disable motors when out.armed == false
   float thr = armed_min_throttle + (1 - armed_min_throttle) * rcin.throttle; //shift throttle range from [0.0 .. 1.0] to [armed_min_throttle .. 1.0]
-
-
+  //Serial.print("rcin.throttle: "); Serial.print(rcin.throttle); Serial.print(" pitch: "); Serial.print(rcin.pitch); Serial.print(" roll: "); Serial.print(rcin.roll); Serial.print(" yaw: "); Serial.println(rcin.yaw);
   // Serial.print("PIDroll.PID: "); Serial.print(PIDroll.PID); Serial.print(" PIDpitch.PID: "); Serial.print(PIDpitch.PID); Serial.print(" PIDyaw.PID: "); Serial.println(PIDyaw.PID);
   //Quad mixing
   out.set(0, thr - PIDpitch.PID - PIDroll.PID - PIDyaw.PID); //M1 Back Right CW
   out.set(1, thr + PIDpitch.PID - PIDroll.PID + PIDyaw.PID); //M2 Front Right CCW
   out.set(2, thr - PIDpitch.PID + PIDroll.PID + PIDyaw.PID); //M3 Back Left CCW
   out.set(3, thr + PIDpitch.PID + PIDroll.PID - PIDyaw.PID); //M4 Front Left CW
-  Serial.print("M1: "); Serial.print(thr - PIDpitch.PID - PIDroll.PID - PIDyaw.PID); Serial.print(" M2: "); Serial.print(thr + PIDpitch.PID - PIDroll.PID + PIDyaw.PID); Serial.print(" M3: "); Serial.print(thr - PIDpitch.PID + PIDroll.PID + PIDyaw.PID); Serial.print(" M4: "); Serial.println(thr + PIDpitch.PID + PIDroll.PID - PIDyaw.PID);
+  //Serial.print("M1: "); Serial.print(thr - PIDpitch.PID - PIDroll.PID - PIDyaw.PID); Serial.print(" M2: "); Serial.print(thr + PIDpitch.PID - PIDroll.PID + PIDyaw.PID); Serial.print(" M3: "); Serial.print(thr - PIDpitch.PID + PIDroll.PID + PIDyaw.PID); Serial.print(" M4: "); Serial.println(thr + PIDpitch.PID + PIDroll.PID - PIDyaw.PID); //Serial.print(" Armed:"); Serial.println(out.armed);
 }
+

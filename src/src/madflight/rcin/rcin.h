@@ -109,10 +109,10 @@ void Rcin::setup() {
 
   //setup stick/switch parameters from config values
   Serial.printf("RCIN: setup channels thr=%d rol=%d pit=%d yaw=%d arm=%d flt=%d\n", (int)cfg.RCIN_THR_CH, (int)cfg.RCIN_ROL_CH, (int)cfg.RCIN_PIT_CH, (int)cfg.RCIN_YAW_CH, (int)cfg.RCIN_ARM_CH, (int)cfg.RCIN_FLT_CH);
-  _setupStick(THR, cfg.RCIN_THR_CH, cfg.RCIN_THR_PULL, cfg.RCIN_THR_MID, cfg.RCIN_THR_PUSH);
-  _setupStick(ROL, cfg.RCIN_ROL_CH, cfg.RCIN_ROL_LEFT, cfg.RCIN_ROL_MID, cfg.RCIN_ROL_RIGHT);
-  _setupStick(PIT, cfg.RCIN_PIT_CH, cfg.RCIN_PIT_PULL, cfg.RCIN_PIT_MID, cfg.RCIN_PIT_PUSH);
-  _setupStick(YAW, cfg.RCIN_YAW_CH, cfg.RCIN_YAW_LEFT, cfg.RCIN_YAW_MID, cfg.RCIN_YAW_RIGHT);
+  _setupStick(THR, 3, cfg.RCIN_THR_PULL, cfg.RCIN_THR_MID, cfg.RCIN_THR_PUSH);
+  _setupStick(ROL, 1, cfg.RCIN_ROL_LEFT, cfg.RCIN_ROL_MID, cfg.RCIN_ROL_RIGHT);
+  _setupStick(PIT, 2, cfg.RCIN_PIT_PULL, cfg.RCIN_PIT_MID, cfg.RCIN_PIT_PUSH);
+  _setupStick(YAW, 4, cfg.RCIN_YAW_LEFT, cfg.RCIN_YAW_MID, cfg.RCIN_YAW_RIGHT);
   st[ARM].ch  = cfg.RCIN_ARM_CH-1;
   st[ARM].min = cfg.RCIN_ARM_MIN;
   st[ARM].mid = 0; //NOT USED
@@ -539,6 +539,34 @@ RcinPWM rcin_instance;
 #elif RCIN_USE == RCIN_USE_IBUS
 #include "IBusBM.h"
 
+IBusBM IBus;
+
+class RcinIBUS : public Rcin {
+  public:
+    void _setup() override {
+      Serial.println("RCIN_USE_IBUS");
+      pwm = pwm_instance;
+      IBus.begin(Serial2, 1, 35, 32);
+    }
+
+    bool _update() override {
+      
+        for(int i=0;i<RCIN_NUM_CHANNELS;i++) {
+          pwm[i] = IBus.readChannel(i);
+          //Serial.printf("ch%d:%d ",i,pwm[i]);
+        }
+        //Serial.println();
+        return true;
+     // }
+      //Serial.println("IBUS: no data");
+      return false;
+    }
+
+  private:
+    uint16_t pwm_instance[16];
+};
+
+RcinIBUS rcin_instance;
 #else
   #error "invalid RCIN_USE value"
 #endif

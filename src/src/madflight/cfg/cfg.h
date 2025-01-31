@@ -142,12 +142,12 @@ public:
   float RCIN_THR_MID   = 1500;
   float RCIN_THR_PUSH  = 1900;
 
-  float RCIN_ROL_CH    = 2;
+  float RCIN_ROL_CH    = 3;
   float RCIN_ROL_LEFT  = 1100;
   float RCIN_ROL_MID   = 1500;
   float RCIN_ROL_RIGHT = 1900;
 
-  float RCIN_PIT_CH    = 3;
+  float RCIN_PIT_CH    = 2;
   float RCIN_PIT_PULL  = 1100;
   float RCIN_PIT_MID   = 1500;
   float RCIN_PIT_PUSH  = 1900;
