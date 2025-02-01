@@ -26,17 +26,32 @@ SOFTWARE.
 
 #include "../interface.h"
 #include "Arduino.h"
+#include "ESP32_DSHOT.h"
+
+
+#define MOTOR_USE_DSHOT 0
+#define MOTOR_USE_PWM 1
 
 void Out::setup() {
 }
 
 bool Out::_setupOutput(char typ, uint8_t i, int pin, int freq_hz, int pwm_min_us, int pwm_max_us){
   if(i >= HW_OUT_COUNT) return false;
-  type[i] = typ;
-  pwm[i].begin(pin, freq_hz, pwm_min_us, pwm_max_us);
-  command[i] = 0;
-  pwm[i].writeFactor(command[i]);
-  return true;
+  
+  #if MOTOR_USE == MOTOR_USE_PWM
+    type[i] = typ;
+    pwm[i].begin(pin, freq_hz, pwm_min_us, pwm_max_us);
+    command[i] = 0;
+    pwm[i].writeFactor(command[i]);
+    return true;
+  #elif MOTOR_USE == MOTOR_USE_DSHOT
+    type[i] = typ;
+    dshot[i].begin(pin, DSHOT::DSHOT600);
+    command[i] = 0;
+    return true;
+  #endif
+
+  return false;
 }
 
 bool Out::setupMotor(uint8_t i, int pin, int freq_hz, int pwm_min_us, int pwm_max_us) {
@@ -50,9 +65,19 @@ void Out::set(uint8_t i, float value) {
   if(i >= HW_OUT_COUNT) return;
   command[i] = value;
   if(armed) {
-    pwm[i].writeFactor(value);
+    #if MOTOR_USE == MOTOR_USE_PWM
+      pwm[i].writeFactor(value);
+    #elif MOTOR_USE == MOTOR_USE_DSHOT
+      //Serial.printf("DSHOT set: %d, %d \n", dshot[i].get_pin(), value);
+      dshot[i].set(value, false);
+      //Serial.println("DSHOT set done");
+    #endif
   }else{
-    if(type[i] == 'M') pwm[i].writeFactor(0);
+    #if MOTOR_USE == MOTOR_USE_PWM
+      if(type[i] == 'M') pwm[i].writeFactor(0);
+    #elif MOTOR_USE == MOTOR_USE_DSHOT
+      dshot[i].set(0, false);
+    #endif
   }
 }
 

@@ -46,6 +46,8 @@
 #define IMU_GYR_LP_HZ 60        //Gyro           (default 60Hz)
 #define IMU_MAG_LP_HZ 1e10      //Magnetometer   (default 1e10Hz, i.e. no filtering)
 
+#define MOTOR_USE MOTOR_USE_DSHOT // Select one: MOTOR_USE_DSHOT, MOTOR_USE_PWM
+
 //========================================================================================================================//
 //                                               PINS CONFIG                                                              //
 //========================================================================================================================//

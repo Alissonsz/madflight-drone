@@ -41,15 +41,6 @@ float yaw_desired = 0;
 //========================================================================================================================//
 //                                                       SETUP()                                                          //
 //========================================================================================================================//
-void printOutStateTask(void *parameter) {
-  //Prints out the state of the out module
-  while(1) {
-    //Serial.print("out 0: "); Serial.print(out.pwm[0]); Serial.print(" 1: "); Serial.print(out.pwm[1]); Serial.print(" 2: "); Serial.print(out.pwm[2]); Serial.print(" 3: "); Serial.println(out.pwm[3]);
-    vTaskDelay(500 / portTICK_PERIOD_MS);
-  }
-  //Serial.print("out.armed: "); Serial.print(out.armed); Serial.print(" out.command: "); Serial.print(out.command[0]); Serial.print(" "); Serial.print(out.command[1]); Serial.print(" "); Serial.print(out.command[2]); Serial.print(" "); Serial.println(out.command[3]);
-
-}
 
 void setup() {
   //setup madflight components: Serial.begin(115200), imu, rcin, led, etc. See src/madflight/interface.h for full interface description of each component. 
@@ -58,6 +49,7 @@ void setup() {
   //setup 4 motors for the quadcopter
   for(int i=0;i<4;i++) {
     //uncomment one line - sets pin, frequency (Hz), minimum (us), maximum (us)
+    Serial.println("Setting up motor " + String(i));
     out.setupMotor(i, HW_PIN_OUT[i], 400, 950, 2000); //Standard PWM: 400Hz, 950-2000 us
     //out.setupMotor(i, (HW_PIN_OUT[i], 2000, 125, 250); //Oneshot125: 2000Hz, 125-250 us
   }
@@ -91,7 +83,7 @@ void imu_loop() {
   //Get radio commands - Note: don't do this in loop() because loop() is a lower priority task than imu_loop(), so in worst case loop() will not get any processor time.
   rcin.update();
 
-  Serial.print("flightmode: "); Serial.println(rcin.flightmode);
+  // Serial.print("flightmode: "); Serial.println(rcin.flightmode);
   //PID Controller RATE or ANGLE
   #ifdef FLIGHTMODE_ANGLE
     control_Angle(rcin.throttle == 0); //Stabilize on pitch/roll angle setpoint, stabilize yaw on rate setpoint  //control_Angle2(rcin_thro_is_low); //Stabilize on pitch/roll setpoint using cascaded method. Rate controller must be tuned well first!
@@ -261,6 +253,7 @@ void out_KillSwitchAndFailsafe() {
 
   //Change to ARMED when throttle is zero and radio armed switch was flipped from disamed to armed position
   if (!out.armed && rcin.throttle == 0 && rcin.arm && !rcin_arm_prev) {
+    xTaskCreate(arm_motor, "motor_arm", 2048, NULL, 1, NULL);
     out.armed = true;
     Serial.println("OUT: ARMED");
     bb.start(); //start blackbox logging
@@ -323,6 +316,11 @@ Yaw right               (CCW+ CW-)       -++-
   out.set(1, thr + PIDpitch.PID - PIDroll.PID + PIDyaw.PID); //M2 Front Right CCW
   out.set(2, thr - PIDpitch.PID + PIDroll.PID + PIDyaw.PID); //M3 Back Left CCW
   out.set(3, thr + PIDpitch.PID + PIDroll.PID - PIDyaw.PID); //M4 Front Left CW
-  //Serial.print("M1: "); Serial.print(thr - PIDpitch.PID - PIDroll.PID - PIDyaw.PID); Serial.print(" M2: "); Serial.print(thr + PIDpitch.PID - PIDroll.PID + PIDyaw.PID); Serial.print(" M3: "); Serial.print(thr - PIDpitch.PID + PIDroll.PID + PIDyaw.PID); Serial.print(" M4: "); Serial.println(thr + PIDpitch.PID + PIDroll.PID - PIDyaw.PID); //Serial.print(" Armed:"); Serial.println(out.armed);
+  // Serial.print("M1: "); Serial.print(thr - PIDpitch.PID - PIDroll.PID - PIDyaw.PID); Serial.print(" M2: "); Serial.print(thr + PIDpitch.PID - PIDroll.PID + PIDyaw.PID); Serial.print(" M3: "); Serial.print(thr - PIDpitch.PID + PIDroll.PID + PIDyaw.PID); Serial.print(" M4: "); Serial.print(thr + PIDpitch.PID + PIDroll.PID - PIDyaw.PID); //Serial.print(" Armed:"); Serial.println(out.armed);
+  // Serial.println();
 }
 
+void arm_motor(void *) {
+  DSHOT::arm();
+  vTaskDelete(NULL);
+}

@@ -26,6 +26,7 @@ SOFTWARE.
 
 #pragma once
 #include "Arduino.h"
+#include "out/ESP32_DSHOT.h"
 
 //=================================================================================================
 // AHRS
@@ -270,7 +271,14 @@ class Out {
   public:
     bool armed = false;
     float command[HW_OUT_COUNT] = {0}; //last commanded outputs (values: 0.0 to 1.0)
-    PWM pwm[HW_OUT_COUNT]; //ESC and Servo outputs (values: 0.0 to 1.0)
+
+    // #if MOTOR_USE == MOTOR_USE_PWM
+    //   PWM pwm[HW_OUT_COUNT]; //ESC and Servo outputs (values: 0.0 to 1.0)
+    // #elif MOTOR_USE == MOTOR_USE_DSHOT
+      DSHOT dshot[HW_OUT_COUNT]; //DSHOT ESC outputs (values: 0.0 to 1.0)
+    // #else
+    //   #error "MOTOR_USE not defined"
+    // #endif
     char type[HW_OUT_COUNT] = {'X'};
 
     void setup();
